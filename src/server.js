@@ -9,6 +9,7 @@
 
 import path from 'path';
 import express from 'express';
+import request from 'request';
 import cookieParser from 'cookie-parser';
 import bodyParser from 'body-parser';
 import expressJwt, { UnauthorizedError as Jwt401Error } from 'express-jwt';
@@ -30,9 +31,16 @@ import models from './data/models';
 import schema from './data/schema';
 import assets from './assets.json'; // eslint-disable-line import/no-unresolved
 import config from './config';
+// Works...kind of
+import proxy from 'express-http-proxy';
+// import proxy from 'http-proxy-middleware';
+import morgan from 'morgan';
+
+// morgan(':method :url :status :res[content-length] - :response-time ms');
 
 const app = express();
 
+app.use(morgan({ format: 'dev', immediate: true }));
 //
 // Tell any CSS tooling (such as Material UI) to use all vendor prefixes if the
 // user agent is not known.
@@ -45,6 +53,37 @@ global.navigator.userAgent = global.navigator.userAgent || 'all';
 // -----------------------------------------------------------------------------
 app.use(express.static(path.resolve(__dirname, 'public')));
 app.use(cookieParser());
+
+app.use('/proxy', proxy('https://api.hubapi.com', {
+  https: true
+}));
+
+/*
+app.use((req, res, next) => {
+  try {
+    if (req.url.match(/hubspotproxy/g)) {
+      console.log('$$$$$$$$$$$$$$$$$$$$$$$$$');
+
+      // console.log(req.method.toLowerCase());'
+      // console.log(req.body);
+      req
+        .pipe(
+          request[req.method.toLowerCase()](
+            'https://api.hubapi.com/oauth/v1/token',
+          ),
+        )
+        .pipe(res);
+    } else {
+      next();
+    }
+  } catch (err) {
+    next(err);
+  }
+});
+*/
+
+
+
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
