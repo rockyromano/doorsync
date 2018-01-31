@@ -54,9 +54,12 @@ global.navigator.userAgent = global.navigator.userAgent || 'all';
 app.use(express.static(path.resolve(__dirname, 'public')));
 app.use(cookieParser());
 
-app.use('/proxy', proxy('https://api.hubapi.com', {
-  https: true
-}));
+app.use(
+  '/hubspotproxy',
+  proxy('https://api.hubapi.com', {
+    https: true,
+  }),
+);
 
 /*
 app.use((req, res, next) => {
@@ -81,8 +84,6 @@ app.use((req, res, next) => {
   }
 });
 */
-
-
 
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());

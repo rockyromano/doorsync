@@ -33,21 +33,25 @@ class Layout extends React.Component {
   }
 
   componentDidMount() {
-    //this.callHubspot();
+    // this.callHubspot();
+    // access token: COjo1vaULBICAQEY2YcdILTSwAIolNQDMhkAng
+    // refresh token: 4fe7e49c-7143-4421-af22-9bd4b6cb3eff
   }
 
   callHubspot() {
-    axios.post(
-      '/hubspotproxy/oauth/v1/token',
-      qs.stringify({
-        grant_type: 'authorization_code',
-        client_secret: '6bf12e11-e5cb-45ee-a5ba-81534e6a0bef',
-        redirect_uri: 'https://www.hubspot.com/',
-        code: '70c55b33-683d-4e8f-a43a-4f67ae8d1cd4',
-        client_id: 'c2011ac8-12fe-4d52-8cde-1283087babcf',
-        scope: '',
-      }),
-    );
+    axios
+      .post(
+        '/hubspotproxy/oauth/v1/token',
+        qs.stringify({
+          grant_type: 'authorization_code',
+          client_secret: '6bf12e11-e5cb-45ee-a5ba-81534e6a0bef',
+          redirect_uri: 'https://www.hubspot.com/',
+          code: '07c84483-c970-4486-b6b1-ab6625c01485',
+          client_id: 'c2011ac8-12fe-4d52-8cde-1283087babcf',
+          scope: '',
+        }),
+      )
+      .then(res => {});
 
     /* axios({
         method: 'POST',
