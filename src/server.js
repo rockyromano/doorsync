@@ -9,17 +9,18 @@
 
 import path from 'path';
 import express from 'express';
-import request from 'request';
 import cookieParser from 'cookie-parser';
 import bodyParser from 'body-parser';
 import expressJwt, { UnauthorizedError as Jwt401Error } from 'express-jwt';
 import { graphql } from 'graphql';
 import expressGraphQL from 'express-graphql';
 import jwt from 'jsonwebtoken';
-import fetch from 'node-fetch';
+import nodeFetch from 'node-fetch';
 import React from 'react';
 import ReactDOM from 'react-dom/server';
 import PrettyError from 'pretty-error';
+import proxy from 'express-http-proxy';
+import morgan from 'morgan';
 import App from './components/App';
 import Html from './components/Html';
 import { ErrorPageWithoutStyle } from './routes/error/ErrorPage';
@@ -30,13 +31,9 @@ import router from './router';
 import models from './data/models';
 import schema from './data/schema';
 import assets from './assets.json'; // eslint-disable-line import/no-unresolved
+import configureStore from './store/configureStore';
+import { setRuntimeVariable } from './actions/runtime';
 import config from './config';
-// Works...kind of
-import proxy from 'express-http-proxy';
-// import proxy from 'http-proxy-middleware';
-import morgan from 'morgan';
-
-// morgan(':method :url :status :res[content-length] - :response-time ms');
 
 const app = express();
 
@@ -155,29 +152,51 @@ app.get('*', async (req, res, next) => {
   try {
     const css = new Set();
 
+    // Enables critical path CSS rendering
+    // https://github.com/kriasoft/isomorphic-style-loader
+    const insertCss = (...styles) => {
+      // eslint-disable-next-line no-underscore-dangle
+      styles.forEach(style => css.add(style._getCss()));
+    };
+
+    // Universal HTTP client
+    const fetch = createFetch(nodeFetch, {
+      baseUrl: config.api.serverUrl,
+      cookie: req.headers.cookie,
+      schema,
+      graphql,
+    });
+
+    const initialState = {
+      user: req.user || null,
+    };
+
+    const store = configureStore(initialState, {
+      fetch,
+      // I should not use `history` on server.. but how I do redirection? follow universal-router
+    });
+
+    store.dispatch(
+      setRuntimeVariable({
+        name: 'initialNow',
+        value: Date.now(),
+      }),
+    );
+
     // Global (context) variables that can be easily accessed from any React component
     // https://facebook.github.io/react/docs/context.html
     const context = {
-      // Enables critical path CSS rendering
-      // https://github.com/kriasoft/isomorphic-style-loader
-      insertCss: (...styles) => {
-        // eslint-disable-next-line no-underscore-dangle
-        styles.forEach(style => css.add(style._getCss()));
-      },
-      // Universal HTTP client
-      fetch: createFetch(fetch, {
-        baseUrl: config.api.serverUrl,
-        cookie: req.headers.cookie,
-        schema,
-        graphql,
-      }),
-    };
-
-    const route = await router.resolve({
-      ...context,
+      insertCss,
+      fetch,
+      // The twins below are wild, be careful!
       pathname: req.path,
       query: req.query,
-    });
+      // You can access redux through react-redux connect
+      store,
+      storeSubscription: null,
+    };
+
+    const route = await router.resolve(context);
 
     if (route.redirect) {
       res.redirect(route.status || 302, route.redirect);
@@ -196,6 +215,7 @@ app.get('*', async (req, res, next) => {
     data.scripts.push(assets.client.js);
     data.app = {
       apiUrl: config.api.clientUrl,
+      state: context.store.getState(),
     };
 
     const html = ReactDOM.renderToStaticMarkup(<Html {...data} />);
