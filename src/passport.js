@@ -15,8 +15,37 @@
 
 import passport from 'passport';
 import { Strategy as FacebookStrategy } from 'passport-facebook';
+import { Strategy as HubSpotStrategy } from 'passport-hubspot-oauth2.0';
 import { User, UserLogin, UserClaim, UserProfile } from './data/models';
 import config from './config';
+
+/*
+
+*/
+const hubspotAuth = {
+  url: 'https://app.hubspot.com/oauth/authorize/',
+  clientId: 'c2011ac8-12fe-4d52-8cde-1283087babcf',
+  clientSecret: '6bf12e11-e5cb-45ee-a5ba-81534e6a0bef',
+  redirectUri: 'https://6027c320.ngrok.io/login/hubspot/return',
+  scope: ['contacts'],
+  responseType: 'code',
+  accessType: 'offline',
+};
+
+passport.use(
+  new HubSpotStrategy(
+    {
+      clientID: hubspotAuth.clientId,
+      clientSecret: hubspotAuth.clientSecret,
+      callbackURL: hubspotAuth.redirectUri,
+      scope: hubspotAuth.scope,
+    },
+    (req, accessToken, refreshToken, profile, done) => {
+      // Verify callback.
+      console.log('in');
+    },
+  ),
+);
 
 /**
  * Sign in with Facebook.

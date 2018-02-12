@@ -34,10 +34,12 @@ import assets from './assets.json'; // eslint-disable-line import/no-unresolved
 import configureStore from './store/configureStore';
 import { setRuntimeVariable } from './actions/runtime';
 import config from './config';
+import initialState from './reducers/initialState';
 
 const app = express();
 
-app.use(morgan({ format: 'dev', immediate: true }));
+// app.use(morgan({ format: 'dev', immediate: true }));
+
 //
 // Tell any CSS tooling (such as Material UI) to use all vendor prefixes if the
 // user agent is not known.
@@ -111,6 +113,25 @@ app.use(passport.initialize());
 if (__DEV__) {
   app.enable('trust proxy');
 }
+
+app.get(
+  '/login/hubspot',
+  passport.authenticate('hubspot', {
+    scope: ['contacts'],
+    session: false,
+  }),
+  (req, res) => {
+    console.log('*****************');
+  },
+);
+app.get('/login/hubspot/return', (req, res) => {
+  console.log('******************');
+  /* const expiresIn = 60 * 60 * 24 * 180; // 180 days
+    const token = jwt.sign(req.user, config.auth.jwt.secret, { expiresIn });
+    res.cookie('id_token', token, { maxAge: 1000 * expiresIn, httpOnly: true }); */
+  res.redirect('/');
+});
+
 app.get(
   '/login/facebook',
   passport.authenticate('facebook', {
@@ -167,11 +188,11 @@ app.get('*', async (req, res, next) => {
       graphql,
     });
 
-    const initialState = {
+    const initState = Object.assign(initialState, {
       user: req.user || null,
-    };
+    });
 
-    const store = configureStore(initialState, {
+    const store = configureStore(initState, {
       fetch,
       // I should not use `history` on server.. but how I do redirection? follow universal-router
     });

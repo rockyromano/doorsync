@@ -11,6 +11,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import withStyles from 'isomorphic-style-loader/lib/withStyles';
 import Link from '../../components/Link/Link';
+import Deals from '../../components/Deals';
 import s from './Home.css';
 
 class Home extends React.Component {
@@ -27,12 +28,11 @@ class Home extends React.Component {
   render() {
     return (
       <div className={s.root}>
-        <a
-          target="_blank"
-          href="https://app.hubspot.com/oauth/authorize?client_id=c2011ac8-12fe-4d52-8cde-1283087babcf&redirect_uri=https://www.hubspot.com/&scope=contacts"
-        >
-          Test
-        </a>
+        <div className={s.container}>
+          <Deals />
+        </div>
+      </div>
+      /* <div className={s.root}>
         <div className={s.container}>
           <h1>React.js News</h1>
           {this.props.news.map(item => (
@@ -48,7 +48,7 @@ class Home extends React.Component {
             </article>
           ))}
         </div>
-      </div>
+      </div> */
     );
   }
 }

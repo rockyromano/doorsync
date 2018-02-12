@@ -9,17 +9,51 @@
 
 import React from 'react';
 import PropTypes from 'prop-types';
+import Link from '../../components/Link';
 import withStyles from 'isomorphic-style-loader/lib/withStyles';
 import s from './Login.css';
+
+const hubspotAuth = {
+  url: 'https://app.hubspot.com/oauth/authorize/',
+  clientId: 'c2011ac8-12fe-4d52-8cde-1283087babcf',
+  clientSecret: '6bf12e11-e5cb-45ee-a5ba-81534e6a0bef',
+  redirectUri: 'https://www.hubspot.com/',
+  scope: 'contacts',
+  responseType: 'code',
+  accessType: 'offline',
+};
+
+// 2c7e79b8-5dfe-450b-b86e-fd86aad28a41
 
 class Login extends React.Component {
   static propTypes = {
     title: PropTypes.string.isRequired,
   };
 
+  constructor(props, context) {
+    super(props, context);
+    this.hubspotUrl = this.getHubspotAuthUrl();
+  }
+
+  getHubspotAuthUrl() {
+    return `${hubspotAuth.url}?client_id=${hubspotAuth.clientId}&redirect_uri=${
+      hubspotAuth.redirectUri
+    }&scope=${hubspotAuth.scope}&response_type=${
+      hubspotAuth.responseType
+    }&access_type=${hubspotAuth.accessType}`;
+  }
+
   render() {
     return (
       <div className={s.root}>
+        <div className={s.container}>
+          <a className={s.link} href="/login/hubspot">
+            <button className={s.button}>Login</button>
+          </a>
+        </div>
+      </div>
+
+      /* <div className={s.root}>
         <div className={s.container}>
           <h1>{this.props.title}</h1>
           <p className={s.lead}>
@@ -120,7 +154,7 @@ class Login extends React.Component {
             </div>
           </form>
         </div>
-      </div>
+      </div> */
     );
   }
 }
