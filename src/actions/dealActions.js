@@ -1,5 +1,5 @@
 import * as types from './actionTypes';
-import dealsApi from '../api/mockDealsApi';
+import dealsApi from '../api/dealsApi';
 
 export function loadAllDealsSuccess(deals) {
   return {

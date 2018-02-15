@@ -16,8 +16,11 @@
 import passport from 'passport';
 import { Strategy as FacebookStrategy } from 'passport-facebook';
 import { Strategy as HubSpotStrategy } from 'passport-hubspot-oauth2.0';
+import { Strategy as TokenStrategy } from './security/strategy';
+//import { Strategy as CookieStrategy } from 'passport-cookie';
 import { User, UserLogin, UserClaim, UserProfile } from './data/models';
 import config from './config';
+import jwt from 'jsonwebtoken';
 
 /*
 
@@ -26,7 +29,7 @@ const hubspotAuth = {
   url: 'https://app.hubspot.com/oauth/authorize/',
   clientId: 'c2011ac8-12fe-4d52-8cde-1283087babcf',
   clientSecret: '6bf12e11-e5cb-45ee-a5ba-81534e6a0bef',
-  redirectUri: 'https://6027c320.ngrok.io/login/hubspot/return',
+  redirectUri: 'https://580a72aa.ngrok.io/login/hubspot/return',
   scope: ['contacts'],
   responseType: 'code',
   accessType: 'offline',
@@ -39,12 +42,51 @@ passport.use(
       clientSecret: hubspotAuth.clientSecret,
       callbackURL: hubspotAuth.redirectUri,
       scope: hubspotAuth.scope,
+      passReqToCallback: true
     },
     (req, accessToken, refreshToken, profile, done) => {
+      //ISSUE: This is never called
+      console.log('&&&&&&&&&&&&&&&&&');
+      console.log('req.query.code: ', req.query.code);
       // Verify callback.
-      console.log('in');
+      done(null, { code: req.query.code });
     },
   ),
+);
+
+passport.use(
+  new TokenStrategy(function authenticate(req, token, done) {
+
+    console.log('@@@@@@@@@@@@@@@@@@@ jwt: ', jwt);
+    console.log('@@@@@@@@@@@@@@@@@@@ req.cookies.access_token:', req.cookies.access_token);
+    console.log('@@@@@@@@@@@@@@@@@@@ config.auth.jwt.secret:', config.auth.jwt.secret);
+    jwt.verify(req.cookies.access_token, config.auth.jwt.secret, (err, decoded) => {
+      console.log('!!!!!!!!!!!!!!!!!!!!!!!!!! req: ' + req);
+      console.log('!!!!!!!!!!!!!!!!!!!!!!!!!!');
+      console.log('!!!!!!!!!!!!!!!!!!!!!!!!!! decoded: ' + decoded.code);
+      done(null, { code: decoded.code });
+    });
+    /*req.getInstance('AuthService').authorize(token)
+      .then(userInfo =>
+        userInfo ?
+        req.getInstance('UserRepository').retrieveById(userInfo.userId)
+          .then(([user]) => ({user, ...userInfo}))
+        :
+        null
+      )
+      .then(({user, roles, profileId, companyId, statusGroups, contactStatusGroups, companyStatusList}) => !user ?
+        logInvalid(done) :
+        done(null, {
+          ..._.omit(user, ['password']),
+          roles,
+          profileId,
+          companyId,
+          statusGroups,
+          contactStatusGroups,
+          companyStatusList
+        }, {}))
+      .catch(logError(done));*/
+  }.bind(this))
 );
 
 /**

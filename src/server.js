@@ -38,7 +38,7 @@ import initialState from './reducers/initialState';
 
 const app = express();
 
-// app.use(morgan({ format: 'dev', immediate: true }));
+app.use(morgan({ format: 'dev', immediate: true }));
 
 //
 // Tell any CSS tooling (such as Material UI) to use all vendor prefixes if the
@@ -53,12 +53,6 @@ global.navigator.userAgent = global.navigator.userAgent || 'all';
 app.use(express.static(path.resolve(__dirname, 'public')));
 app.use(cookieParser());
 
-app.use(
-  '/hubspotproxy',
-  proxy('https://api.hubapi.com', {
-    https: true,
-  }),
-);
 
 /*
 app.use((req, res, next) => {
@@ -87,6 +81,36 @@ app.use((req, res, next) => {
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
+app.use(passport.initialize());
+
+passport.serializeUser(function(user, done) {
+  done(null, user);
+});
+
+passport.deserializeUser(function(user, done) {
+  done(null, user);
+});
+
+app.use(
+  '/hubspotproxy',
+  passport.authenticate('bearer'),
+  (err, req, res, next) => {
+    req.headers.authorization = 'Bearer ' + req.user.code;
+    next();
+  },
+  proxy('https://api.hubapi.com', {
+    proxyReqBodyDecorator: function (proxyReq, srcReq) {
+      if (srcReq.body) {
+        proxyReq.bodyContent = JSON.stringify(srcReq.body);
+      }
+      console.log('DECORRRRRRRRRATE proxyReq.bodyContent: ', proxyReq.bodyContent);
+      return proxyReq;
+    },
+    https: true,
+  }),
+);
+
+
 //
 // Authentication
 // -----------------------------------------------------------------------------
@@ -94,21 +118,19 @@ app.use(
   expressJwt({
     secret: config.auth.jwt.secret,
     credentialsRequired: false,
-    getToken: req => req.cookies.id_token,
+    getToken: req => req.cookies.access_token,
   }),
 );
 // Error handler for express-jwt
 app.use((err, req, res, next) => {
   // eslint-disable-line no-unused-vars
   if (err instanceof Jwt401Error) {
-    console.error('[express-jwt-error]', req.cookies.id_token);
+    console.error('[express-jwt-error]', req.cookies.access_tokenc);
     // `clearCookie`, otherwise user can't use web-app until cookie expires
-    res.clearCookie('id_token');
+    res.clearCookie('access_token');
   }
   next(err);
 });
-
-app.use(passport.initialize());
 
 if (__DEV__) {
   app.enable('trust proxy');
@@ -121,16 +143,23 @@ app.get(
     session: false,
   }),
   (req, res) => {
-    console.log('*****************');
+    //ISSUE: Why is this never called?
+    console.log('$$$$$$$$$$$$$$$');
+    console.log(req.session.passport.user);
   },
 );
+
 app.get('/login/hubspot/return', (req, res) => {
-  console.log('******************');
-  /* const expiresIn = 60 * 60 * 24 * 180; // 180 days
-    const token = jwt.sign(req.user, config.auth.jwt.secret, { expiresIn });
-    res.cookie('id_token', token, { maxAge: 1000 * expiresIn, httpOnly: true }); */
+  console.log('****************');
+  console.log('req.query.user: ', req.query.code);
+  const expiresIn = 60 * 60 * 24 * 180; // 180 days
+  const token = jwt.sign({ code: req.query.code }, config.auth.jwt.secret, { expiresIn });
+  res.cookie('access_token', token, { maxAge: 1000 * expiresIn, httpOnly: true });
   res.redirect('/');
 });
+
+//1. intercept hubspot calls
+//2. deserialize access_token passport.deserialize()?
 
 app.get(
   '/login/facebook',
@@ -148,7 +177,7 @@ app.get(
   (req, res) => {
     const expiresIn = 60 * 60 * 24 * 180; // 180 days
     const token = jwt.sign(req.user, config.auth.jwt.secret, { expiresIn });
-    res.cookie('id_token', token, { maxAge: 1000 * expiresIn, httpOnly: true });
+    res.cookie('access_token', token, { maxAge: 1000 * expiresIn, httpOnly: true });
     res.redirect('/');
   },
 );

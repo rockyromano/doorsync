@@ -42,6 +42,11 @@ module.exports = {
   auth: {
     jwt: { secret: process.env.JWT_SECRET || 'React Starter Kit' },
 
+    hubspot: {
+      id: process.env.HUBSPOT_APP_ID || 'c2011ac8-12fe-4d52-8cde-1283087babcf',
+      secret: process.env.HUBSPOT_APP_SECRET || '6bf12e11-e5cb-45ee-a5ba-81534e6a0bef'
+    },
+
     // https://developers.facebook.com/
     facebook: {
       id: process.env.FACEBOOK_APP_ID || '186244551745631',
