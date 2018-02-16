@@ -33,7 +33,7 @@ class Deals extends React.Component {
   render() {
     return (
       <div className={s.root}>
-        <div className={s.container}>{this.props.deals.map(this.dealRow)}</div>
+        { this.props.deals.length && <div className={s.container}>{this.props.deals.map(this.dealRow)}</div> }
       </div>
     );
   }

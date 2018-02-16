@@ -89,15 +89,13 @@ passport.deserializeUser(function(user, done) {
   done(null, user);
 });
 
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json());
+
 app.use(
   '/hubspotproxy',
   passport.authenticate('bearer'),
-  (err, req, res, next) => {
-    console.log('SET AUTHHHHHHHHHHHHH');
-    req.headers.authorization = 'Bearer ' + req.user.code;
-    next();
-  },
-  proxy('https://api.hubapi.com', {
+  proxy('https://api.hubapi.com', { https: true })/*, {
     proxyReqBodyDecorator: function (proxyReq, srcReq) {
       if (srcReq.body) {
         proxyReq.bodyContent = JSON.stringify(srcReq.body);
@@ -105,22 +103,13 @@ app.use(
       console.log('DDDDDDDDECORATE proxyReqBodyDecorator: ', proxyReq.bodyContent);
       return proxyReq;
     },
-    /*proxyReqPathResolver: function (req) {
-      console.log('DDDDDDDDECORATE proxyReqPathResolver: ', req);
-      return req;
-    },
-    userResHeaderDecorator(headers, userReq, userRes, proxyReq, proxyRes) {
-      // recieves an Object of headers, returns an Object of headers.
-      console.log('DDDDDDDDECORATE userResHeaderDecorator: ', headers);
-      return headers;
+    userResDecorator: function(proxyRes, proxyResData, userReq, userRes) {
+      console.log('************************************');
+      let data = JSON.parse(proxyResData.toString('utf8'));
+      data.newProperty = 'exciting data';
+      return JSON.stringify(data);
     },*/
-    https: true,
-  }),
 );
-
-
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use(bodyParser.json());
 
 //
 // Authentication
@@ -163,16 +152,7 @@ app.get(
 app.get('/login/hubspot/return', 
   passport.authenticate('hubspot'), 
   (req, res) => {
-    console.log('****************************************');
-    console.log('****************************************');
-    console.log('****************************************');
-    console.log('****************************************');
-    console.log('****************************************');
-    console.log('****************************************');
-    console.log('****************************************');
-    console.log('****************************************');
-    console.log('****************************************');
-  
+    console.log('Hubspot Return');
     const expiresIn = 60 * 60 * 24 * 180; // 180 days
     const token = jwt.sign({ access_code: req.user.accessToken, refreshToken: req.user.refreshToken }, config.auth.jwt.secret, { expiresIn });
     res.cookie('access_token', token, { maxAge: 1000 * expiresIn, httpOnly: true });

@@ -8,16 +8,24 @@ export function loadAllDealsSuccess(deals) {
   };
 }
 
+export function loadAllDealsError(err) {
+  return {
+    type: types.LOAD_ALL_DEALS_SUCCESS,
+    err,
+  };
+}
+
 export function loadAllDeals() {
   // Thunk ALWAYS expects a function that receives a dispatch
   return function(dispatch) {
     return dealsApi
       .getAllDeals()
       .then(deals => {
+        debugger;
         dispatch(loadAllDealsSuccess(deals));
-      })
-      .catch(error => {
-        throw error;
+      }).catch((err) => {
+        debugger;
+        dispatch(loadAllDealsError(err));
       });
   };
 }
