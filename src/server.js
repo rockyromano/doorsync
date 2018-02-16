@@ -78,8 +78,6 @@ app.use((req, res, next) => {
 });
 */
 
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use(bodyParser.json());
 
 app.use(passport.initialize());
 
@@ -95,6 +93,7 @@ app.use(
   '/hubspotproxy',
   passport.authenticate('bearer'),
   (err, req, res, next) => {
+    console.log('SET AUTHHHHHHHHHHHHH');
     req.headers.authorization = 'Bearer ' + req.user.code;
     next();
   },
@@ -103,13 +102,25 @@ app.use(
       if (srcReq.body) {
         proxyReq.bodyContent = JSON.stringify(srcReq.body);
       }
-      console.log('DECORRRRRRRRRATE proxyReq.bodyContent: ', proxyReq.bodyContent);
+      console.log('DDDDDDDDECORATE proxyReqBodyDecorator: ', proxyReq.bodyContent);
       return proxyReq;
     },
+    /*proxyReqPathResolver: function (req) {
+      console.log('DDDDDDDDECORATE proxyReqPathResolver: ', req);
+      return req;
+    },
+    userResHeaderDecorator(headers, userReq, userRes, proxyReq, proxyRes) {
+      // recieves an Object of headers, returns an Object of headers.
+      console.log('DDDDDDDDECORATE userResHeaderDecorator: ', headers);
+      return headers;
+    },*/
     https: true,
   }),
 );
 
+
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json());
 
 //
 // Authentication
@@ -149,14 +160,68 @@ app.get(
   },
 );
 
-app.get('/login/hubspot/return', (req, res) => {
-  console.log('****************');
-  console.log('req.query.user: ', req.query.code);
+app.get('/login/hubspot/return', 
+  passport.authenticate('hubspot'), 
+  (req, res) => {
+    console.log('****************************************');
+    console.log('****************************************');
+    console.log('****************************************');
+    console.log('****************************************');
+    console.log('****************************************');
+    console.log('****************************************');
+    console.log('****************************************');
+    console.log('****************************************');
+    console.log('****************************************');
+  
+    const expiresIn = 60 * 60 * 24 * 180; // 180 days
+    const token = jwt.sign({ access_code: req.user.accessToken, refreshToken: req.user.refreshToken }, config.auth.jwt.secret, { expiresIn });
+    res.cookie('access_token', token, { maxAge: 1000 * expiresIn, httpOnly: true });
+    res.redirect('/');
+  }
+)   
+
+app.get(
+  '/login/facebook/return',
+  passport.authenticate('facebook', {
+    failureRedirect: '/login',
+    session: false,
+  }),
+  (req, res) => {
+    const expiresIn = 60 * 60 * 24 * 180; // 180 days
+    const token = jwt.sign(req.user, config.auth.jwt.secret, { expiresIn });
+    res.cookie('access_token', token, { maxAge: 1000 * expiresIn, httpOnly: true });
+    res.redirect('/');
+  },
+);
+
+/*passport.authenticate('hubspot', function (req, accessToken, refreshToken, profile, done) {
+
+
+
+
+
+  res.redirect('/');
+}));  //(req, res, next) => {
+  
+  /*nodeFetch('/hubspotproxy/oauth/v1/token', { 
+    method: 'POST', 
+    body: JSON.stringify({
+      
+    }),
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded;charset=utf-8'
+    }
+  }).then(res => res.json())
+    .then(json => console.log(json));*/
+  //next();
+
+
+  /*console.log('req.query.user: ', req.query.code);
   const expiresIn = 60 * 60 * 24 * 180; // 180 days
   const token = jwt.sign({ code: req.query.code }, config.auth.jwt.secret, { expiresIn });
   res.cookie('access_token', token, { maxAge: 1000 * expiresIn, httpOnly: true });
-  res.redirect('/');
-});
+  res.redirect('/');*/
+//});
 
 //1. intercept hubspot calls
 //2. deserialize access_token passport.deserialize()?

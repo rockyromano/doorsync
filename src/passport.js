@@ -47,9 +47,16 @@ passport.use(
     (req, accessToken, refreshToken, profile, done) => {
       //ISSUE: This is never called
       console.log('&&&&&&&&&&&&&&&&&');
+      console.log('&&&&&&&&&&&&&&&&&');
+      console.log('&&&&&&&&&&&&&&&&&');
+      console.log('&&&&&&&&&&&&&&&&&');
+      console.log('&&&&&&&&&&&&&&&&&');
+      console.log('&&&&&&&&&&&&&&&&&');
       console.log('req.query.code: ', req.query.code);
+
+
       // Verify callback.
-      done(null, { code: req.query.code });
+      done(null, { accessToken, refreshToken });
     },
   ),
 );
@@ -63,8 +70,10 @@ passport.use(
     jwt.verify(req.cookies.access_token, config.auth.jwt.secret, (err, decoded) => {
       console.log('!!!!!!!!!!!!!!!!!!!!!!!!!! req: ' + req);
       console.log('!!!!!!!!!!!!!!!!!!!!!!!!!!');
-      console.log('!!!!!!!!!!!!!!!!!!!!!!!!!! decoded: ' + decoded.code);
-      done(null, { code: decoded.code });
+      console.log('!!!!!!!!!!!!!!!!!!!!!!!!!! decoded: ' + decoded.access_code);
+      //TODO: Would like this to not be here
+      req.headers.authorization = 'Bearer ' + decoded.access_code;
+      done(null, { code: decoded.access_code });
     });
     /*req.getInstance('AuthService').authorize(token)
       .then(userInfo =>
