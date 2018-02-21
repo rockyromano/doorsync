@@ -29,7 +29,7 @@ const hubspotAuth = {
   url: 'https://app.hubspot.com/oauth/authorize/',
   clientId: 'c2011ac8-12fe-4d52-8cde-1283087babcf',
   clientSecret: '6bf12e11-e5cb-45ee-a5ba-81534e6a0bef',
-  redirectUri: 'https://580a72aa.ngrok.io/login/hubspot/return',
+  redirectUri: 'https://2f1ad374.ngrok.io/login/hubspot/return',
   scope: ['contacts'],
   responseType: 'code',
   accessType: 'offline',

@@ -15,6 +15,7 @@ import s from './Deals.css';
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
 import dealsApi from '../../api/mockDealsApi';
+import CreateDeal from './CreateDeal/CreateDeal';
 
 class Deals extends React.Component {
   constructor(props, context) {
@@ -33,6 +34,7 @@ class Deals extends React.Component {
   render() {
     return (
       <div className={s.root}>
+        <CreateDeal></CreateDeal>
         { this.props.deals.length && <div className={s.container}>{this.props.deals.map(this.dealRow)}</div> }
       </div>
     );

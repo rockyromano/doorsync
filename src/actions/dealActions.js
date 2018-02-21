@@ -24,7 +24,6 @@ export function loadAllDeals() {
         debugger;
         dispatch(loadAllDealsSuccess(deals));
       }).catch((err) => {
-        debugger;
         dispatch(loadAllDealsError(err));
       });
   };
